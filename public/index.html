@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>SwiftShip - Shipment Tracker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SwiftShip - Shipment Management</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -11,97 +12,140 @@
       padding: 20px;
       color: #333;
     }
-
     h1, h2 {
-      color: #003366;
+      color: #007bff;
     }
-
-    form, .section {
-      background: white;
-      padding: 20px;
+    form {
+      background: #fff;
+      padding: 15px;
       margin-bottom: 20px;
-      border-radius: 10px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      border-radius: 8px;
+      box-shadow: 0 0 10px #ddd;
     }
-
-    input, button {
-      padding: 10px;
+    input, select, button {
+      padding: 8px;
       margin: 5px 0;
       width: 100%;
       box-sizing: border-box;
-      border: 1px solid #ccc;
-      border-radius: 6px;
     }
-
     button {
-      background-color: #007bff;
+      background: #007bff;
       color: white;
       border: none;
       cursor: pointer;
-      font-weight: bold;
     }
-
     button:hover {
-      background-color: #0056b3;
+      background: #0056b3;
     }
-
-    ul {
-      list-style: none;
-      padding-left: 0;
-    }
-
-    li {
-      margin-bottom: 15px;
-      background: #e9f0f7;
+    #trackingResult {
+      background: #e2f0ff;
       padding: 10px;
       border-radius: 6px;
-    }
-
-    #trackResult {
       margin-top: 10px;
-      font-weight: bold;
     }
   </style>
 </head>
 <body>
-  <h1>📦 SwiftShip - Shipment Manager</h1>
 
-  <!-- Shipment Creation -->
-  <form id="create-form">
-    <h2>Create Shipment</h2>
-    <input id="trackingNumber" placeholder="Tracking Number" required />
-    <input id="sender" placeholder="Sender" required />
-    <input id="recipient" placeholder="Recipient" required />
-    <input id="status" placeholder="Status" required />
-    <input id="origin" placeholder="Country of Origin" required />
-    <input id="destination" placeholder="Destination Country" required />
-    <input id="weight" placeholder="Item Weight (kg)" type="number" required />
-    <input id="bn" placeholder="B.N (Bill Number)" required />
+  <h1>🚚 SwiftShip - Shipment Manager</h1>
+
+  <!-- Shipment Creation Form -->
+  <h2>Create Shipment</h2>
+  <form id="shipmentForm">
+    <input type="text" id="trackingNumber" placeholder="Tracking Number" required />
+    <input type="text" id="sender" placeholder="Sender Name" required />
+    <input type="text" id="recipient" placeholder="Recipient Name" required />
+    <input type="text" id="origin" placeholder="Country of Origin" required />
+    <input type="text" id="destination" placeholder="Destination Country" required />
+    <input type="number" id="weight" placeholder="Item Weight (kg)" required />
+    <input type="text" id="bn" placeholder="B.N (optional)" />
+    <select id="status" required>
+      <option value="" disabled selected>Status</option>
+      <option value="in transit">In Transit</option>
+      <option value="ready for pick up">Ready for Pick Up</option>
+      <option value="delivered">Delivered</option>
+    </select>
     <button type="submit">Create Shipment</button>
   </form>
 
-  <!-- Shipment List -->
-  <div class="section">
-    <h2>📋 All Shipments</h2>
-    <button type="button" onclick="loadShipments()">Refresh List</button>
-    <ul id="shipmentList"></ul>
-  </div>
+  <!-- Shipment Tracking Form -->
+  <h2>Track Shipment</h2>
+  <form id="trackForm">
+    <input type="text" id="trackNumber" placeholder="Enter Tracking Number" required />
+    <button type="submit">Track</button>
+  </form>
 
-  <!-- Shipment Tracker -->
-  <div class="section">
-    <h2>🔍 Track Shipment</h2>
-    <input id="trackInput" placeholder="Enter Tracking Number" />
-    <button type="button" onclick="trackShipment()">Track</button>
-    <div id="trackResult"></div>
-  </div>
+  <div id="trackingResult"></div>
 
   <script>
-    const API = 'http://localhost:5000/api/shipments';
+    const API_URL = "https://swiftship-backend-53b5.onrender.com/api/shipments";
 
-    // Create shipment
-    document.getElementById('create-form').addEventListener('submit', async (e) => {
+    // Create shipment handler
+    document.getElementById("shipmentForm").addEventListener("submit", async function (e) {
       e.preventDefault();
 
-      const payload = {
-        trackingNumber: document.getElementById('trackingNumber').value,
-        sender
+      const shipment = {
+        trackingNumber: document.getElementById("trackingNumber").value,
+        sender: document.getElementById("sender").value,
+        recipient: document.getElementById("recipient").value,
+        origin: document.getElementById("origin").value,
+        destination: document.getElementById("destination").value,
+        weight: parseFloat(document.getElementById("weight").value),
+        bn: document.getElementById("bn").value,
+        status: document.getElementById("status").value
+      };
+
+      try {
+        const res = await fetch(API_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(shipment),
+        });
+
+        if (res.ok) {
+          alert("✅ Shipment created successfully!");
+          document.getElementById("shipmentForm").reset();
+        } else {
+          alert("❌ Error creating shipment.");
+        }
+      } catch (err) {
+        console.error(err);
+        alert("❌ Failed to create shipment.");
+      }
+    });
+
+    // Track shipment handler
+    document.getElementById("trackForm").addEventListener("submit", async function (e) {
+      e.preventDefault();
+      const trackNumber = document.getElementById("trackNumber").value.trim();
+      const resultDiv = document.getElementById("trackingResult");
+
+      try {
+        const res = await fetch(API_URL);
+        const shipments = await res.json();
+
+        const found = shipments.find(s => s.trackingNumber === trackNumber);
+
+        if (found) {
+          resultDiv.innerHTML = `
+            <h3>Shipment Found:</h3>
+            <p><strong>From:</strong> ${found.origin} ➡ <strong>To:</strong> ${found.destination}</p>
+            <p><strong>Status:</strong> ${found.status}</p>
+            <p><strong>Sender:</strong> ${found.sender}</p>
+            <p><strong>Recipient:</strong> ${found.recipient}</p>
+            <p><strong>Weight:</strong> ${found.weight}kg | <strong>B.N:</strong> ${found.bn || "N/A"}</p>
+          `;
+        } else {
+          resultDiv.innerHTML = `<p>❌ No shipment found with tracking number <strong>${trackNumber}</strong>.</p>`;
+        }
+      } catch (err) {
+        console.error(err);
+        resultDiv.innerHTML = `<p>❌ Error fetching tracking data.</p>`;
+      }
+    });
+  </script>
+
+</body>
+</html>
