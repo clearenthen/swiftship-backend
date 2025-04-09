@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: swiftship-backend
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: MONGO_URI
+        value: your_mongodb_uri
+      - key: PORT
+        value: 10000

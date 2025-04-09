@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>SwiftShip - Shipment Tracker</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f8f9fa;
+      margin: 0;
+      padding: 20px;
+      color: #333;
+    }
+
+    h1, h2 {
+      color: #003366;
+    }
+
+    form, .section {
+      background: white;
+      padding: 20px;
+      margin-bottom: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    input, button {
+      padding: 10px;
+      margin: 5px 0;
+      width: 100%;
+      box-sizing: border-box;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+
+    button {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    ul {
+      list-style: none;
+      padding-left: 0;
+    }
+
+    li {
+      margin-bottom: 15px;
+      background: #e9f0f7;
+      padding: 10px;
+      border-radius: 6px;
+    }
+
+    #trackResult {
+      margin-top: 10px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h1>📦 SwiftShip - Shipment Manager</h1>
+
+  <!-- Shipment Creation -->
+  <form id="create-form">
+    <h2>Create Shipment</h2>
+    <input id="trackingNumber" placeholder="Tracking Number" required />
+    <input id="sender" placeholder="Sender" required />
+    <input id="recipient" placeholder="Recipient" required />
+    <input id="status" placeholder="Status" required />
+    <input id="origin" placeholder="Country of Origin" required />
+    <input id="destination" placeholder="Destination Country" required />
+    <input id="weight" placeholder="Item Weight (kg)" type="number" required />
+    <input id="bn" placeholder="B.N (Bill Number)" required />
+    <button type="submit">Create Shipment</button>
+  </form>
+
+  <!-- Shipment List -->
+  <div class="section">
+    <h2>📋 All Shipments</h2>
+    <button type="button" onclick="loadShipments()">Refresh List</button>
+    <ul id="shipmentList"></ul>
+  </div>
+
+  <!-- Shipment Tracker -->
+  <div class="section">
+    <h2>🔍 Track Shipment</h2>
+    <input id="trackInput" placeholder="Enter Tracking Number" />
+    <button type="button" onclick="trackShipment()">Track</button>
+    <div id="trackResult"></div>
+  </div>
+
+  <script>
+    const API = 'http://localhost:5000/api/shipments';
+
+    // Create shipment
+    document.getElementById('create-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const payload = {
+        trackingNumber: document.getElementById('trackingNumber').value,
+        sender
